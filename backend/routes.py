@@ -1,6 +1,9 @@
 from django.shortcuts import render        
 from django.http import HttpResponse
+from weather.models import Weather
+from django.utils import timezone
 import requests
+import json
    
 def home(request):
     return HttpResponse("Hello, welcome to the weather api backend") 
@@ -27,9 +30,14 @@ def weatherapicall(request):
         "longitude": {lon},
         "hourly": "temperature_2m"
     }
-    weatherdata = requests.get(url, params=params).text
+    weatherdata = json.loads(requests.get(url, params=params).text)
+    
+    hourly_weather_data = weatherdata.get('hourly')
 
-       
+    hourly_time_temp_list  = list(zip(hourly_weather_data.get('time'),hourly_weather_data.get('temperature_2m')))
+    for data in hourly_time_temp_list:
+        weather_db = Weather(weather_date=data[0],temp=data[1])
+        weather_db.save()
     return HttpResponse(weatherdata)
 
 
