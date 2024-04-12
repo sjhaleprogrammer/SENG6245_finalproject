@@ -38,7 +38,7 @@ def weatherapicall(request):
     for data in hourly_time_temp_list:
         weather_db = Weather(weather_date=data[0],temp=data[1])
         weather_db.save()
-    return HttpResponse(weatherdata)
+    return HttpResponse(json.dumps(weatherdata, indent=4).encode('utf-8'))
 
 
 
