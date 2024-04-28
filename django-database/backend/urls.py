@@ -18,8 +18,10 @@ from django.contrib import admin
 from django.urls import path
 from weather import routes
 
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', routes.home),
-    
+    path('get_temperature_data/', routes.get_temperature_data)
 ]
+
