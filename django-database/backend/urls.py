@@ -17,16 +17,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from weather import routes
-from django.urls import path
-from . import views
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', routes.home),
-    
+    path('get-data/', routes.get_data, name='get_data')
 ]
 
-urlpatterns = [
-    path('', views.home, name='home'),
-    path('get-data/', views.get_data, name='get_data'), 
-]
