@@ -21,6 +21,5 @@ from weather import routes
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', routes.home),
-    path('weatherapicall/', routes.weatherapicall),
-    path('chatapicall/', routes.chatapicall),
+    
 ]
