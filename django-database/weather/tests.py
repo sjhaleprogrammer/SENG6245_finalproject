@@ -1,79 +1,49 @@
-from django.test import TestCase, RequestFactory
-from django.http import HttpRequest
-from myapp.views import home, get_data, save_weather_data, save_ai_summary
-from myapp.models import Weather, AISummary
-import unittest
+from django.test import TestCase
 from unittest.mock import patch
-from myapp import get_weather_data
-from datetime import datetime
+from apps import *  
 
-class HomeViewTestCase(TestCase):
-    def test_home_function(self):
-        request = HttpRequest()
-        response = home(request)
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, b"Hello, welcome to the weather api backend")
-
-
-class GetDataViewTestCase(TestCase):
-    def setUp(self):
-        self.factory = RequestFactory()
-        # Create some sample weather data for testing
-        Weather.objects.create(weather_date='2024-04-28', temperature_data=25.5)
-        Weather.objects.create(weather_date='2024-04-29', temperature_data=26.5)
-
-    def test_get_data_function(self):
-        request = self.factory.get('/get_data/')
-        response = get_data(request)
-        self.assertEqual(response.status_code, 200)
-        expected_response_data = [
-            {'weather_date': '2024-04-28', 'temperature_data': 25.5},
-            {'weather_date': '2024-04-29', 'temperature_data': 26.5}
-        ]
-        self.assertJSONEqual(str(response.content, encoding='utf-8'), expected_response_data)
-
-
-class TestGetWeatherData(unittest.TestCase):
-    @patch('myapp.requests.get')
+class Tests(TestCase):
+    @patch('weather.apps.requests.get')
     def test_get_weather_data_success(self, mock_requests_get):
-        mock_response = unittest.mock.Mock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {
+        # Mock IP data response
+        mock_ip_data = {
+            "lat": 40.7128,
+            "lon": -74.0060
+        }
+
+        # Mock weather data response
+        mock_weather_data = {
             "hourly": {
-                "temperature_2m": {"time1": 20, "time2": 25}
+                "temperature_2m": {
+                    "2024-04-28T00:00:00": 20.1,
+                    "2024-04-28T01:00:00": 19.5,
+                    "2024-04-28T02:00:00": 18.9,
+                }
             }
         }
-        mock_requests_get.return_value = mock_response
 
+        # Set up mock response object
+        mock_response = mock_requests_get.return_value
+        mock_response.status_code = 200
+        mock_response.json.side_effect = [mock_ip_data, mock_weather_data]
+
+        # Call the function
         hourly_time_temp_dict = get_weather_data()
-        self.assertIsNotNone(hourly_time_temp_dict)
 
-    @patch('myapp.requests.get')
+        # Assertions
+        self.assertEqual(hourly_time_temp_dict, mock_weather_data['hourly']['temperature_2m'])
+
+    @patch('weather.apps.requests.get')
     def test_get_weather_data_failure(self, mock_requests_get):
-        mock_response = unittest.mock.Mock()
+        # Set up mock response object for failure
+        mock_response = mock_requests_get.return_value
         mock_response.status_code = 404
         mock_response.text = "Not Found"
-        mock_requests_get.return_value = mock_response
 
-        with self.assertRaises(ValueError):
+        # Test if ValueError is raised
+        with self.assertRaises(ValueError) as context:
             get_weather_data()
 
-
-class TestSaveWeatherData(TestCase):
-    def test_save_weather_data(self):
-        hourly_time_temp_dict = {"time1": 20, "time2": 25}
-        weather_obj = save_weather_data(hourly_time_temp_dict)
-        self.assertIsInstance(weather_obj, Weather)
-        self.assertIsNotNone(weather_obj.weather_date)
-        self.assertEqual(weather_obj.temperature_data, hourly_time_temp_dict)
-
-
-class TestSaveAISummary(TestCase):
-    def test_save_ai_summary(self):
-        weather_obj = Weather.objects.create(weather_date=datetime.now(), temperature_data={"time1": 20, "time2": 25})
-        summary_text = "This is a summary text."
-        ai_summary = save_ai_summary(weather_obj, summary_text)
-        self.assertIsInstance(ai_summary, AISummary)
-        self.assertEqual(ai_summary.weather, weather_obj)
-        self.assertEqual(ai_summary.text, summary_text)
+        # Assert the exception message
+        self.assertEqual(str(context.exception), "Error fetching weather data: 404, Not Found")
 

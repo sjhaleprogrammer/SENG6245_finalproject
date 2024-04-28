@@ -57,8 +57,6 @@ class WeatherConfig(AppConfig):
         
         if 'runserver' not in sys.argv:
             return
-        from .models import Weather, AISummary
-
 
         try:
             hourly_time_temp_dict = get_weather_data()
