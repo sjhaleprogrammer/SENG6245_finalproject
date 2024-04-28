@@ -22,6 +22,6 @@ from weather import routes
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', routes.home),
-    path('get-data/', routes.get_data, name='get_data')
+    path('get_temperature_data/', routes.get_temperature_data)
 ]
 
