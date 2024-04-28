@@ -11,6 +11,10 @@ class Weather(models.Model):
     def create_weather(cls, weather_date, temperature_data):
         return cls(weather_date=weather_date, temperature_data=temperature_data)
 
+    class Meta:
+        app_label = 'weather.apps.WeatherConfig'
+   
+
 class AISummary(models.Model):
     weather = models.OneToOneField(Weather, on_delete=models.CASCADE, related_name='summary')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -18,4 +22,8 @@ class AISummary(models.Model):
 
     def __str__(self):
         return f"ChatGPT Summary for {self.weather.weather_date} ({self.created_at})"
+    
+    class Meta:
+        app_label = 'weather.apps.WeatherConfig'
+   
 
