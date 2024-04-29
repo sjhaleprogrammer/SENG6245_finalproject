@@ -23,7 +23,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', routes.home),
     path('get_temperature_data/', routes.get_temperature_data),
-    path('index', include('weather.urls')),
+    path('index/', include('weather.urls')),
 
 ]
 
