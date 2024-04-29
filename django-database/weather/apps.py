@@ -5,6 +5,7 @@ from datetime import datetime
 
 
 
+
 def get_weather_data():
     ip_address = '75.110.12.97'  
     ip_data = requests.get(f"http://ip-api.com/json/{ip_address}").json()
@@ -45,24 +46,39 @@ def save_ai_summary(weather_obj, summary_text):
     ai_summary = AISummary.objects.create(weather=weather_obj, text=summary_text)
     return ai_summary
 
-
+def retrieve_curret_data():
+    from .models import Weather
+    from datetime import datetime
+    
+    curr_date = datetime.now().date()
+    start_date = datetime.combine(curr_date, datetime.min.time())
+    end_date = datetime.combine(curr_date, datetime.max.time())
+    
+    data = Weather.objects.filter(weather_date__range=(start_date,end_date))
+    
+    return data
 
 class WeatherConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'weather'
-    
 
-    
     def ready(self):
+        from .models import Weather
+        from datetime import datetime
         
         if 'runserver' not in sys.argv:
             return
 
         try:
-            hourly_time_temp_dict = get_weather_data()
-            summary_text = call_ai_api(hourly_time_temp_dict)
-            weather_obj = save_weather_data(hourly_time_temp_dict)
-            save_ai_summary(weather_obj, summary_text)
-            print("Weather data and ChatGPT summary saved successfully.")
+            data = retrieve_curret_data()
+            if data is not None:
+                print('data found and returned successfully')
+                return data
+            else:
+                hourly_time_temp_dict = get_weather_data()
+                weather_obj = save_weather_data(hourly_time_temp_dict)
+                summary_text = call_ai_api(hourly_time_temp_dict)
+                save_ai_summary(weather_obj, summary_text)
+                print("Weather data and ChatGPT summary saved successfully.")
         except Exception as e:
             print(f"An error occurred: {e}")

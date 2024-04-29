@@ -3,6 +3,8 @@ from .models import Weather
 import requests
 import json
 from datetime import datetime, date
+from .models import AISummary
+
    
 def home(request):
     return HttpResponse("Hello, welcome to the weather api backend") 
@@ -18,4 +20,16 @@ def get_temperature_data(request):
 
     return JsonResponse(serialized_data, safe=False)
 
+
+
+def weather_detail(request, weather_id):
+    # Retrieve weather data from database
+    weather_instance = Weather.objects.get(pk=weather_id)
+
+    # Generate summary
+    weather_data = {"temperature": weather_instance.temperature, "humidity": weather_instance.humidity, "description": weather_instance.description}
+    summary_text = AISummary.generate_weather_summary(weather_data)
+
+    # Save summary to database
+    AISummary.save_summary_to_database(summary_text, weather_instance)
 
