@@ -5,6 +5,7 @@ import requests
 import sys
 
 
+
 def get_weather_data():
     ip_address = '75.110.12.97'
     ip_data = requests.get(f"http://ip-api.com/json/{ip_address}").json()
@@ -62,6 +63,7 @@ class WeatherConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'weather'
 
+
     def ready(self):
         from .models import Weather, AISummary
 
@@ -102,6 +104,8 @@ class WeatherConfig(AppConfig):
                     print("Failed to save weather data.")
         except requests.exceptions.RequestException as e:
             print(f"An error occurred while fetching weather data: {e}")
+
+ 
         except Exception as e:
             print(f"An error occurred: {e}")
 

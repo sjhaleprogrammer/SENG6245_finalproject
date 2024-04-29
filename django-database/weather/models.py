@@ -23,6 +23,4 @@ class AISummary(models.Model):
         return f"ChatGPT Summary for {self.weather.weather_date} ({self.created_at})"  
 
     
-    
-
 
