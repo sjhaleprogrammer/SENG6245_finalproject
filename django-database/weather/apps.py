@@ -28,7 +28,7 @@ def get_weather_data():
 
 def call_ai_api(weatherdata):
     prompt = f"The weather outside is currently {weatherdata}. Can you provide a summary of what's going on?"
-    client = cohere.Client(api_key="YOUR_API_KEY",)
+    client = cohere.Client(api_key="your key here",)
     try:
         chat = client.chat(
             message=f"{prompt}",
@@ -50,7 +50,10 @@ def save_weather_data(hourly_time_temp_dict):
 def save_ai_summary(weather_obj, summary_text):
     from .models import AISummary
     today = timezone.now().date()  # Get the current date without considering timezone
-    ai_summary = AISummary.objects.get_or_create(weather__weather_date=today, defaults={'text': summary_text})
+    ai_summary, created = AISummary.objects.get_or_create(weather=weather_obj, defaults={'text': summary_text})
+    if not created:
+        ai_summary.text = summary_text
+        ai_summary.save()
     return ai_summary
 
 
