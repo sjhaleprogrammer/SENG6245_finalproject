@@ -1,9 +1,10 @@
 from django.shortcuts import render
+from django.utils import timezone
 from .apps import WeatherConfig
 from datetime import datetime
 import requests
-from .models import Weather
-from .models import AISummary
+import cohere
+from .models import Weather,AISummary
 
 def get_weather_data():
     ip_address = '75.110.12.97'  
@@ -29,7 +30,17 @@ def get_weather_data():
 
 def call_ai_api(weatherdata):
     
-   pass 
+    prompt = f"The weather outside is currently {weatherdata}. Can you provide a summary of what's going on?"
+    client = cohere.Client(api_key="your key here",)
+    try:
+        chat = client.chat(
+            message=f"{prompt}",
+            model="command"
+        )
+        return chat
+    except Exception as e:
+        print(f"An error occurred while calling AI: {e}")
+        return None 
    
       
 
@@ -40,7 +51,12 @@ def save_weather_data(hourly_time_temp_dict):
 
 
 def save_ai_summary(weather_obj, summary_text):
-    ai_summary = AISummary.objects.create(weather=weather_obj, text=summary_text)
+    from .models import AISummary
+    today = timezone.now().date()  # Get the current date without considering timezone
+    ai_summary, created = AISummary.objects.get_or_create(weather=weather_obj, defaults={'text': summary_text})
+    if not created:
+        ai_summary.text = summary_text
+        ai_summary.save()
     return ai_summary
 
 def retrieve_current_data():
@@ -56,6 +72,7 @@ def index(request):
     # Use the processed data in your view
     try:
         data = retrieve_current_data()
+        
         if data is None:
             hourly_time_temp_dict = get_weather_data()
             weather_obj = save_weather_data(hourly_time_temp_dict)
