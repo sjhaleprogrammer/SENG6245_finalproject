@@ -1,4 +1,4 @@
-# Weather Forecast Display
+# SkyScript
 
 ## Overview
 This project aims to create a dynamic weather forecast display website that provides users with accurate weather information based on their location. It utilizes data from the OpenWeather API to showcase temperature, humidity, wind speeds, precipitation, and weather conditions for different times of the day. The website features a user-friendly interface with dynamic elements that adjust based on real-time weather updates.
