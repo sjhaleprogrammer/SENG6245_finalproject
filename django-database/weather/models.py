@@ -26,7 +26,7 @@ class AISummary(models.Model):
     @staticmethod
     def generate_weather_summary(weatherdata):
         prompt = f"The weather outside is currently {weatherdata}. Can you provide a summary of what's going on?"
-        openai.api_key = 'sk-proj-4rNF89GeBsAQ3PEbrEdyT3BlbkFJQZhuk8o5fa8eWuUpChWY'
+        openai.api_key = 'Github doesnt want me to upload it with this information, its in teams'
         response = openai.Completion.create(
             engine="text-davinci-002",
             prompt=prompt,
