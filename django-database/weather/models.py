@@ -1,5 +1,4 @@
 from django.db import models
-import openai
 
 class Weather(models.Model):
     weather_date = models.DateTimeField("date", primary_key=True)
