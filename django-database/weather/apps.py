@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 from django.utils import timezone
-from openai import OpenAI
+import cohere
 import requests
 import sys
 
@@ -28,20 +28,15 @@ def get_weather_data():
 
 def call_ai_api(weatherdata):
     prompt = f"The weather outside is currently {weatherdata}. Can you provide a summary of what's going on?"
-    client = OpenAI(api_key="needs a working API KEY")
+    client = cohere.Client(api_key="YOUR_API_KEY",)
     try:
-        chat_completion = client.chat.completions.create(
-            messages=[
-                {
-                    "role": "user",
-                    "content": f"{prompt}",
-                }
-            ],
-            model="gpt-3.5-turbo",
+        chat = co.chat(
+            message=f"{prompt}",
+            model="command"
         )
-        return chat_completion.choices[0].message.content
+        return chat
     except Exception as e:
-        print(f"An error occurred while calling OpenAI: {e}")
+        print(f"An error occurred while calling AI: {e}")
         return None
 
 
@@ -83,7 +78,7 @@ class WeatherConfig(AppConfig):
                     if ai_summary is not None:
                         print(ai_summary)
                         save_ai_summary(today_weather, ai_summary)
-                        print("Weather data and ChatGPT summary saved successfully.")
+                        print("Weather data and AI summary saved successfully.")
                     else:
                         print("Failed to generate AI summary.")
                 else:
@@ -97,7 +92,7 @@ class WeatherConfig(AppConfig):
                     if ai_summary is not None:
                         print(ai_summary)
                         save_ai_summary(weather_obj, ai_summary)
-                        print("Weather data and ChatGPT summary saved successfully.")
+                        print("Weather data and AI summary saved successfully.")
                     else:
                         print("Failed to generate AI summary.")
                 else:
