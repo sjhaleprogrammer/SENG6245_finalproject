@@ -12,6 +12,7 @@ class Weather(models.Model):
         return cls(weather_date=weather_date, temperature_data=temperature_data)
 
 
+
 class AISummary(models.Model):
     weather = models.OneToOneField(Weather, on_delete=models.CASCADE, related_name='summary')
     created_at = models.DateTimeField(auto_now_add=True)
