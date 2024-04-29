@@ -9,7 +9,7 @@ This project aims to create a dynamic weather forecast display website that prov
 - Dynamic user interface that adjusts based on real-time weather data.
 - Collect user location preferences and store them in a SQLite database.
 - Utilize API calls for data retrieval and updates from the OpenWeather API.
-- Integration with OpenAI for generating smart and intuitive weather descriptions.
+- Integration with Cohere for generating smart and intuitive weather descriptions.
 - Provide recommendations for appropriate clothing based on weather forecasts.
 
 ## Future Enhancements
@@ -21,7 +21,7 @@ This project aims to create a dynamic weather forecast display website that prov
 - Frontend: Astro for creating dynamic and efficient UI.
 - Backend: Django framework for robust server-side functionality.
 - Database: SQLite for storing user data and weather information.
-- Integration: OpenAI for generating weather descriptions.
+- Integration: Cohere for generating weather descriptions.
 
 ## Setup Instructions
 1. Clone the repository.

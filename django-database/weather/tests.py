@@ -1,6 +1,10 @@
 from django.test import TestCase
 from unittest.mock import patch
-from apps import *  
+import unittest
+from datetime import datetime
+from .models import AISummary, Weather
+import openai
+from .apps import get_weather_data
 
 class Tests(TestCase):
     @patch('weather.apps.requests.get')
@@ -46,4 +50,34 @@ class Tests(TestCase):
 
         # Assert the exception message
         self.assertEqual(str(context.exception), "Error fetching weather data: 404, Not Found")
+
+class TestAISummary(TestCase):
+
+    @patch('openai.Completion.create')
+    def test_generate_weather_summary(self, mock_completion_create):
+    # Mock the OpenAI API response with correct structure
+        mock_completion_create.return_value = {
+        'choices': [{'text': 'Clear skies with mild temperatures.'}]
+    }
+
+    # Call the generate_weather_summary method with a string weather description
+        weather_data = "Clear skies with mild temperatures."
+        summary_text = AISummary.generate_weather_summary(weather_data)
+        print("Response from generate_weather_summary:", summary_text)  # Add this line to print the summary text
+
+    # Check if the summary text is correct
+        self.assertEqual(summary_text, 'Clear skies with mild temperatures.')
+
+    def test_save_summary_to_database(self):
+        # Create a dummy Weather instance
+        weather_instance = Weather.objects.create(weather_date=datetime.now(), temperature=20, condition='clear')
+
+        # Call the save_summary_to_database method with a dummy weather summary
+        summary_text = 'Clear skies with mild temperatures.'
+        AISummary.save_summary_to_database(summary_text, weather_instance)
+
+        # Check if the summary was saved in the database
+        summary_instance = AISummary.objects.first()
+        self.assertEqual(summary_instance.text, summary_text)
+        self.assertEqual(summary_instance.weather, weather_instance)
 
