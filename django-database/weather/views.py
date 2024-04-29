@@ -71,15 +71,41 @@ def retrieve_current_data():
 def index(request):
     # Use the processed data in your view
     try:
-        data = retrieve_current_data()
-        
-        if data is None:
+        today_weather = Weather.objects.filter(weather_date=timezone.now().date()).first()
+                                   
+        if today_weather:
+            # Data for today already exists, no need to fetch and save again
+            print("Weather data for today already exist.")
+            print("Checking if AI summary for today already exists in the database...")
+            if not AISummary.objects.filter(weather__weather_date=timezone.now().date()).exists():
+                # AI summary for today does not exist in the database
+                ai_summary = call_ai_api(today_weather.temperature_data)
+                if ai_summary is not None:
+                    print(ai_summary)
+                    save_ai_summary(today_weather, ai_summary)
+                    print("Weather data and AI summary saved successfully.")
+                else:
+                    print("Failed to generate AI summary.")
+            else:
+                print("Weather data and AI summary already exist.")
+        else:
             hourly_time_temp_dict = get_weather_data()
             weather_obj = save_weather_data(hourly_time_temp_dict)
-            summary_text = call_ai_api(hourly_time_temp_dict)
-            save_ai_summary(weather_obj, summary_text)
-            print("Weather data and ChatGPT summary saved successfully.")
-            data = retrieve_current_data()
+            if weather_obj:
+                # AI summary for today does not exist in the database
+                ai_summary = call_ai_api(hourly_time_temp_dict)
+                if ai_summary is not None:
+                    print(ai_summary)
+                    save_ai_summary(weather_obj, ai_summary)
+                    print("Weather data and AI summary saved successfully.")
+                else:
+                    print("Failed to generate AI summary.")
+            else:
+                print("Failed to save weather data.")
+        
+        
+        data = AISummary.objects.filter(weather__weather_date=timezone.now().date())
+        
     except Exception as e:
         print(f"An error occurred: {e}")
         data = "Error loading data"
