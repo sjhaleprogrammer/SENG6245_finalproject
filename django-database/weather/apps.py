@@ -1,13 +1,12 @@
 from django.apps import AppConfig
+from django.utils import timezone
+from openai import OpenAI
 import requests
 import sys
-from datetime import datetime
-
-
 
 
 def get_weather_data():
-    ip_address = '75.110.12.97'  
+    ip_address = '75.110.12.97'
     ip_data = requests.get(f"http://ip-api.com/json/{ip_address}").json()
     lat = ip_data.get('lat')
     lon = ip_data.get('lon')
@@ -19,66 +18,91 @@ def get_weather_data():
         "hourly": "temperature_2m"
     }
     response = requests.get(url, params=params)
-    if response.status_code == 200:
-        weatherdata = response.json()
-        hourly_weather_data = weatherdata.get('hourly')
-        hourly_time_temp_dict = hourly_weather_data.get('temperature_2m')
-        return hourly_time_temp_dict
-    else:
-        raise ValueError(f"Error fetching weather data: {response.status_code}, {response.text}")
+    response.raise_for_status()  # Raises an HTTPError for bad status codes
+    weatherdata = response.json()
+    hourly_weather_data = weatherdata.get('hourly')
+    hourly_time_temp_dict = hourly_weather_data.get('temperature_2m')
+    return hourly_time_temp_dict
 
 
 def call_ai_api(weatherdata):
-    
-   pass 
-   
-      
+    prompt = f"The weather outside is currently {weatherdata}. Can you provide a summary of what's going on?"
+    client = OpenAI(api_key="needs a working API KEY")
+    try:
+        chat_completion = client.chat.completions.create(
+            messages=[
+                {
+                    "role": "user",
+                    "content": f"{prompt}",
+                }
+            ],
+            model="gpt-3.5-turbo",
+        )
+        return chat_completion.choices[0].message.content
+    except Exception as e:
+        print(f"An error occurred while calling OpenAI: {e}")
+        return None
+
 
 def save_weather_data(hourly_time_temp_dict):
     from .models import Weather
-    weather_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    weather_obj = Weather.objects.create(weather_date=weather_date, temperature_data=hourly_time_temp_dict)
+    weather_date = timezone.now().date()  # Get the current date without considering timezone
+    weather_obj = Weather.objects.get_or_create(weather_date=weather_date, defaults={'temperature_data': hourly_time_temp_dict})
     return weather_obj
 
 
 def save_ai_summary(weather_obj, summary_text):
     from .models import AISummary
-    ai_summary = AISummary.objects.create(weather=weather_obj, text=summary_text)
+    today = timezone.now().date()  # Get the current date without considering timezone
+    ai_summary = AISummary.objects.get_or_create(weather__weather_date=today, defaults={'text': summary_text})
     return ai_summary
 
-def retrieve_curret_data():
-    from .models import Weather
-    from datetime import datetime
-    
-    curr_date = datetime.now().date()
-    start_date = datetime.combine(curr_date, datetime.min.time())
-    end_date = datetime.combine(curr_date, datetime.max.time())
-    
-    data = Weather.objects.filter(weather_date__range=(start_date,end_date))
-    
-    return data
 
 class WeatherConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'weather'
 
     def ready(self):
-        from .models import Weather
-        from datetime import datetime
-        
+        from .models import Weather, AISummary
+
         if 'runserver' not in sys.argv:
             return
-
         try:
-            data = retrieve_curret_data()
-            if data is not None:
-                print('data found and returned successfully')
-                return data
+            # Check if weather data for today already exists in the database
+            today_weather = Weather.objects.filter(weather_date=timezone.now().date()).first()
+                                   
+            if today_weather:
+                # Data for today already exists, no need to fetch and save again
+                print("Weather data for today already exist.")
+                print("Checking if AI summary for today already exists in the database...")
+                if not AISummary.objects.filter(weather__weather_date=timezone.now().date()).exists():
+                    # AI summary for today does not exist in the database
+                    ai_summary = call_ai_api(today_weather.temperature_data)
+                    if ai_summary is not None:
+                        print(ai_summary)
+                        save_ai_summary(today_weather, ai_summary)
+                        print("Weather data and ChatGPT summary saved successfully.")
+                    else:
+                        print("Failed to generate AI summary.")
+                else:
+                    print("Weather data and AI summary already exist.")
             else:
                 hourly_time_temp_dict = get_weather_data()
                 weather_obj = save_weather_data(hourly_time_temp_dict)
-                summary_text = call_ai_api(hourly_time_temp_dict)
-                save_ai_summary(weather_obj, summary_text)
-                print("Weather data and ChatGPT summary saved successfully.")
+                if weather_obj:
+                    # AI summary for today does not exist in the database
+                    ai_summary = call_ai_api(hourly_time_temp_dict)
+                    if ai_summary is not None:
+                        print(ai_summary)
+                        save_ai_summary(weather_obj, ai_summary)
+                        print("Weather data and ChatGPT summary saved successfully.")
+                    else:
+                        print("Failed to generate AI summary.")
+                else:
+                    print("Failed to save weather data.")
+        except requests.exceptions.RequestException as e:
+            print(f"An error occurred while fetching weather data: {e}")
         except Exception as e:
             print(f"An error occurred: {e}")
+
+
