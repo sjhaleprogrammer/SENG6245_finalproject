@@ -61,7 +61,8 @@ def retrieve_curret_data():
 class WeatherConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'weather'
-
+    data ="this is weather sample data"
+  
     def ready(self):
         from .models import Weather
         from datetime import datetime
