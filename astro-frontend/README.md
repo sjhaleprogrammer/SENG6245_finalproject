@@ -1,3 +1,5 @@
+Below are the steps of the Project:-
+
 Weather Forecast Display:
 
 Showcase temperature, humidity, wind speeds, and precipitation for a given location based on latitude and longitude.
