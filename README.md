@@ -18,7 +18,7 @@ This project aims to create a dynamic weather forecast display website that prov
 - Provide historical weather data through graphical representations for analysis.
 
 ## Technologies Used
-- Frontend: Astro for creating dynamic and efficient UI.
+- Frontend: Django framework for user-friendly interface
 - Backend: Django framework for robust server-side functionality.
 - Database: SQLite for storing user data and weather information.
 - Integration: Cohere for generating weather descriptions.
