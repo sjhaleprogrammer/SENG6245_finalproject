@@ -1,10 +1,10 @@
 from django.shortcuts import render
 from django.utils import timezone
-from .apps import WeatherConfig
 from datetime import datetime
 import requests
 import cohere
-from .models import Weather,AISummary
+from .models import Weather, AISummary
+
 
 def get_weather_data():
     ip_address = '75.110.12.97'  
@@ -51,7 +51,6 @@ def save_weather_data(hourly_time_temp_dict):
 
 
 def save_ai_summary(weather_obj, summary_text):
-    from .models import AISummary
     today = timezone.now().date()  # Get the current date without considering timezone
     ai_summary, created = AISummary.objects.get_or_create(weather=weather_obj, defaults={'text': summary_text})
     if not created:

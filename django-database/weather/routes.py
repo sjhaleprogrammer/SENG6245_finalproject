@@ -1,9 +1,7 @@
 from django.http import HttpResponse, JsonResponse
 from .models import Weather
-import requests
-import json
-from datetime import datetime, date
-from .models import AISummary
+from datetime import date
+
 
    
 def home(request):
