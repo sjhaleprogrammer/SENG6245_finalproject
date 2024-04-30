@@ -1,10 +1,7 @@
 from django.test import TestCase
 from unittest.mock import patch
-import unittest
 from datetime import datetime
 from .models import AISummary, Weather
-import openai
-from .apps import get_weather_data
 
 class Tests(TestCase):
     @patch('weather.apps.requests.get')

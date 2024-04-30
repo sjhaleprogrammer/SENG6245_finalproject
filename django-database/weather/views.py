@@ -4,7 +4,8 @@ from .apps import WeatherConfig
 from datetime import datetime, date
 import requests
 import cohere
-from .models import Weather,AISummary
+from .models import Weather, AISummary
+
 
 def get_weather_data():
     ip_address = '75.110.12.97'  
