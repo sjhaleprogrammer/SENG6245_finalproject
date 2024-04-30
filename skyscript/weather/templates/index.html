@@ -4,11 +4,56 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Django App</title>
+    <style>
+      body {
+          font-family: Arial, sans-serif;
+          margin: 0;
+          padding: 0;
+          background-color: #f2f2f2;
+          color: #333;
+          line-height: 1.6;
+      }
+
+      h1 {
+          color: #007bff;
+          margin-bottom: 20px;
+      }
+
+      .header-text {
+          font-size: 36px; /* Larger font size for the header */
+          font-weight: bold; /* Bold font weight for the header */
+          text-transform: uppercase; /* Convert text to uppercase */
+          letter-spacing: 2px; /* Add letter spacing for emphasis */
+      }
+
+      p {
+          color: #666;
+          margin-bottom: 10px;
+      }
+
+      ul {
+          list-style-type: none;
+          padding: 0;
+          margin: 0;
+      }
+
+      li {
+          margin-bottom: 10px;
+          background-color: #fff;
+          padding: 10px;
+          border-radius: 5px;
+          box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+  </style>
 </head>
 <body>
-    <h1>Sky Script</h1>
+    <h1>SkyScript</h1>
     <ul>
-		{{processed_data}}     
+        <li>Current Date: {{ current_date }}</p>
+        <li>Current Temperature: {{ temperature }}°C</li>
+        <li>Minimum Temperature: {{ min_temperature }}°C</p>
+        <li>Maximum Temperature: {{ max_temperature }}°C</p>
+        <li>{{ processed_data }}
     </ul>
 </body>
 </html>
