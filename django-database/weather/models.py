@@ -15,7 +15,7 @@ class Weather(models.Model):
 
 class AISummary(models.Model):
     weather = models.OneToOneField(Weather, on_delete=models.CASCADE, related_name='summary')
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField("created_at")
     text = models.TextField()
 
     def __str__(self):
