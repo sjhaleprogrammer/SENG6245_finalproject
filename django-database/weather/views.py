@@ -31,7 +31,7 @@ def get_weather_data():
 def call_ai_api(weatherdata):
     
     prompt = f"The weather outside is currently {weatherdata}. Can you provide a summary of what's going on?"
-    client = cohere.Client(api_key="fIUcvIBKj77qssfAOoJu1ZCnQjxSTtCK3BmrTDb0")
+    client = cohere.Client(api_key="Your key")
     try:
         chat = client.chat(
             message=f"{prompt}",
