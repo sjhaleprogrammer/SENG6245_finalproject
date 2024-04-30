@@ -19,7 +19,7 @@ class AISummary(models.Model):
     text = models.TextField()
 
     def __str__(self):
-        return f"ChatGPT Summary for {self.weather.weather_date} ({self.created_at})"  
+        return f"ChatGPT Summary for {self.weather.weather_date} ({self.created_at}) {self.text}"  
 
     
 
