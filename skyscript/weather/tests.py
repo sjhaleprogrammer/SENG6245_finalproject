@@ -78,3 +78,29 @@ class TestAISummary(TestCase):
         self.assertEqual(summary_instance.text, summary_text)
         self.assertEqual(summary_instance.weather, weather_instance)
 
+
+class ConnectionErrorTests(TestCase):
+    @patch('weather.apps.requests.get')
+    def test_get_weather_data_connection_error(self, mock_requests_get):
+        # Set up mock response object for connection error
+        mock_requests_get.side_effect = ConnectionError()
+
+        # Test if ConnectionError is raised when there's a connection issue
+        with self.assertRaises(ConnectionError):
+            get_weather_data()
+
+    @patch('weather.apps.requests.get')
+    def test_get_weather_data_invalid_response(self, mock_requests_get):
+        # Set up mock response object for invalid response (missing data)
+        mock_response = mock_requests_get.return_value
+        mock_response.status_code = 200
+        mock_response.json.side_effect = [{"lat": 40.7128}, None]  # Missing "lon" in first response, None in second
+
+        # Test if ValueError is raised when data is incomplete
+        with self.assertRaises(ValueError) as context:
+            get_weather_data()
+
+        # Assert the exception message
+        self.assertEqual(str(context.exception), "Incomplete weather data received")
+
+
