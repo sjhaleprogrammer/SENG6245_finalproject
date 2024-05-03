@@ -3,13 +3,24 @@ from django.utils import timezone
 from datetime import datetime, date
 import requests
 import cohere
+import sys
 
 
-def get_weather_data():
-    ip_address = '75.110.12.97'  
-    ip_data = requests.get(f"http://ip-api.com/json/{ip_address}").json()
-    lat = ip_data.get('lat')
-    lon = ip_data.get('lon')
+
+# resolve ip address to lat and lon
+def call_ip_api(ip_address):
+
+    url = f"http://ip-api.com/json/{ip_address}"
+    response = requests.get(url)
+    if response.status_code == 200:
+        ip_data = response.json()
+        return ip_data.get('lat'), ip_data.get('lon')
+    else:
+        raise ValueError(f"Error fetching IP data: {response.status_code}, {response.text}")
+
+
+# get weather data
+def call_weather_api(lat, lon):
 
     url = "https://api.open-meteo.com/v1/forecast"
     params = {
@@ -27,9 +38,10 @@ def get_weather_data():
         raise ValueError(f"Error fetching weather data: {response.status_code}, {response.text}")
 
 
+# get AI summary
 def call_ai_api(weatherdata):
     
-    prompt = f"The weather outside is currently {weatherdata}. Can you provide a summary of what's going on?"
+    prompt = f"Here are is hourly celsius temperatures {weatherdata}. Act like a news caster and generate a summary of the weather, this is going on the front of a website not too long"
     client = cohere.Client(api_key="fIUcvIBKj77qssfAOoJu1ZCnQjxSTtCK3BmrTDb0",)
     try:
         chat = client.chat(
@@ -42,14 +54,14 @@ def call_ai_api(weatherdata):
         return None 
    
       
-
+#save weather data
 def save_weather_data(hourly_time_temp_dict):
     from .models import Weather
     weather_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     weather_obj = Weather.objects.create(weather_date=weather_date, temperature_data=hourly_time_temp_dict)
     return weather_obj
 
-
+#save AI summary
 def save_ai_summary(weather_obj, summary_text, curr_date):
     from .models import AISummary
     today = timezone.now().date()  # Get the current date without considering timezone
@@ -60,42 +72,49 @@ def save_ai_summary(weather_obj, summary_text, curr_date):
         ai_summary.save()
     return ai_summary
 
-def retrieve_current_data():
-    curr_date = datetime.now().date()
-    start_date = datetime.combine(curr_date, datetime.min.time())
-    end_date = datetime.combine(curr_date, datetime.max.time())
-    
-    data = Weather.objects.filter(weather_date__range=(start_date,end_date))
-    
-    return data
+
+
 
 class WeatherConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
     name = 'weather'
+    
 
+
+    # note the implementation of ready() is not meant to be ran for production instead in a realworld app would us a cron job because the website would be always running.
     def ready(self):
+
+        if not 'runserver' in sys.argv:
+            return
 
         from .models import Weather, AISummary
         try:
           curr_date = timezone.now().date()
-          print('current date: ', curr_date)
-          #today_weather = Weather.objects.filter(weather_date == curr_date).first()
+          print("Today's date:", curr_date)
+          print("Checking if weather data and AI summary already exist...")
+
           today_weather = Weather.objects.filter(weather_date__day = datetime.now().day).first()
-          #print('today weather',today_weather)   
-          ai_summary = None
+          today_ai_summary = AISummary.objects.filter(created_at= date.today()).first()
 
           if today_weather is None:
-            hourly_time_temp_dict = get_weather_data()  
+            print("Weather data not found. Fetching data...")
+            lat, lon = call_ip_api('75.110.12.97')  
+            hourly_time_temp_dict = call_weather_api(lat,lon)  
             save_weather_data(hourly_time_temp_dict)
             today_weather = Weather.objects.filter(weather_date__day = datetime.now().day).first()
+          else:
+            print("Weather data already exists for today.")
 
-          if not AISummary.objects.filter(created_at= date.today()).exists():
+          if today_ai_summary is None:
+             print("AI summary not found. Generating summary...") 
              ai_summary = call_ai_api(today_weather.temperature_data)
              if ai_summary is not None:
                save_ai_summary(today_weather, ai_summary, curr_date)
                print("Weather data and AI summary saved successfully.")
              else:
                data = "Failed to generate AI summary."
+          else:
+            print("AI summary already exists for today.")
 
         except Exception as e:
             print(f"An error occurred: {e}")
