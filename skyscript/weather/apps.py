@@ -79,10 +79,9 @@ class WeatherConfig(AppConfig):
 
     def ready(self):
         from .models import Weather, AISummary
-
         try:
             curr_date = timezone.now().date()
-            print('current date: ', curr_date)
+            print('current date:::: ', curr_date)
 
             # Fetch weather today
             today_weather = Weather.objects.filter(weather_date__day=datetime.now().day).first()
