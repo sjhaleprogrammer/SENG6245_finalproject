@@ -84,7 +84,7 @@ class WeatherConfig(AppConfig):
             curr_date = timezone.now().date()
             print('current date: ', curr_date)
 
-            # Fetch today's weather
+            # Fetch weather today
             today_weather = Weather.objects.filter(weather_date__day=datetime.now().day).first()
 
             if today_weather is None:
