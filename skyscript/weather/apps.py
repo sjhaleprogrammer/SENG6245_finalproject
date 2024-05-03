@@ -50,14 +50,18 @@ def save_weather_data(hourly_time_temp_dict):
     return weather_obj
 
 
+
 def save_ai_summary(weather_obj, summary_text, curr_date):
-    from .models import AISummary
-    today = timezone.now().date()  # Get the current date without considering timezone
-    ai_summary, created = AISummary.objects.get_or_create(weather=weather_obj, defaults={'text': summary_text, 'created_at': curr_date})
-    if not created:
-        ai_summary.text = summary_text
-        ai_summary.created_at = curr_date
-        ai_summary.save()
+    ai_summary, _ = AISummary.objects.get_or_create(
+        weather=weather_obj,
+        defaults={'text': summary_text, 'created_at': curr_date}
+    )
+
+    # Update text and created_at if the AISummary object already exists
+    ai_summary.text = summary_text
+    ai_summary.created_at = curr_date
+    ai_summary.save()
+
     return ai_summary
 
 def retrieve_current_data():
@@ -74,32 +78,33 @@ class WeatherConfig(AppConfig):
     name = 'weather'
 
     def ready(self):
-
         from .models import Weather, AISummary
+
         try:
-          curr_date = timezone.now().date()
-          print('current date: ', curr_date)
-          #today_weather = Weather.objects.filter(weather_date == curr_date).first()
-          today_weather = Weather.objects.filter(weather_date__day = datetime.now().day).first()
-          #print('today weather',today_weather)   
-          ai_summary = None
+            curr_date = timezone.now().date()
+            print('current date: ', curr_date)
 
-          if today_weather is None:
-            hourly_time_temp_dict = get_weather_data()  
-            save_weather_data(hourly_time_temp_dict)
-            today_weather = Weather.objects.filter(weather_date__day = datetime.now().day).first()
+            # Fetch today's weather
+            today_weather = Weather.objects.filter(weather_date__day=datetime.now().day).first()
 
-          if not AISummary.objects.filter(created_at= date.today()).exists():
-             ai_summary = call_ai_api(today_weather.temperature_data)
-             if ai_summary is not None:
-               save_ai_summary(today_weather, ai_summary, curr_date)
-               print("Weather data and AI summary saved successfully.")
-             else:
-               data = "Failed to generate AI summary."
+            if today_weather is None:
+                hourly_time_temp_dict = get_weather_data()
+                save_weather_data(hourly_time_temp_dict)
+                today_weather = Weather.objects.filter(weather_date__day=datetime.now().day).first()
+
+            if not AISummary.objects.filter(created_at=curr_date).exists():
+                ai_summary = call_ai_api(today_weather.temperature_data)
+                if ai_summary is not None:
+                    save_ai_summary(today_weather, ai_summary, curr_date)
+                    print("Weather data and AI summary saved successfully.")
+                else:
+                    print("Failed to generate AI summary.")
+            else:
+                print("AI summary already exists for today.")
 
         except Exception as e:
             print(f"An error occurred: {e}")
-            data = "Error loading data"
+            print("Error loading data")
 
     
 
