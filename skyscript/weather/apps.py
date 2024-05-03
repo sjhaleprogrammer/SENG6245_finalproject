@@ -3,8 +3,6 @@ from django.utils import timezone
 from datetime import datetime, date
 import requests
 import cohere
-
-
 def get_weather_data():
     ip_address = '75.110.12.97'  
     ip_data = requests.get(f"http://ip-api.com/json/{ip_address}").json()
@@ -26,7 +24,6 @@ def get_weather_data():
     else:
         raise ValueError(f"Error fetching weather data: {response.status_code}, {response.text}")
 
-
 def call_ai_api(weatherdata):
     
     prompt = f"The weather outside is currently {weatherdata}. Can you provide a summary of what's going on?"
@@ -39,16 +36,13 @@ def call_ai_api(weatherdata):
         return chat.text
     except Exception as e:
         print(f"An error occurred while calling AI: {e}")
-        return None 
-   
-      
+        return None       
 
 def save_weather_data(hourly_time_temp_dict):
     from .models import Weather
     weather_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     weather_obj = Weather.objects.create(weather_date=weather_date, temperature_data=hourly_time_temp_dict)
     return weather_obj
-
 
 
 def save_ai_summary(weather_obj, summary_text, curr_date):
